@@ -1,0 +1,68 @@
+{{define "page"}}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>{{.Title}}</title>
+        {{template "Resources"}}
+        {{template "JS"}}
+    </head>
+    <body>
+        <div class="uk-card uk-card-default uk-card-body">
+            <progress class="uk-progress" value="{{.Tasks.TasksWithStatus true}}" max="{{len .Tasks}}"></progress>
+            <h3>{{.Title}}</h3>
+            <span>Всего задач: {{len .Tasks}}, выполнено {{.Tasks.CompletePercent}}%</span>
+            {{template "Tasks" .}}
+        </div>
+    </body>
+</html>
+{{end}}
+
+{{define "Tasks"}}
+<div class="uk-card uk-card-body">
+    <ul class="uk-list">
+        {{range $key, $val := .Tasks}}            
+            <li>
+                <div class="uk-card uk-card-default uk-card-body">
+                    {{if .Completed}}
+                        <input task-id="{{$key}}" class="uk-checkbox" type="checkbox" checked>
+                    {{else}}
+                        <input task-id="{{$key}}" class="uk-checkbox" type="checkbox">
+                    {{end}}
+                    <span>{{.Text}}</span>
+                    <div class="uk-align-right">
+                        {{range .Labels}}
+                            <span class="uk-label">{{.}}</span>
+                        {{end}}
+                    </div>
+                </div>
+            </li>
+        {{end}}
+    </ul>
+</div>
+{{end}}
+
+{{define "JS"}}
+<script>
+window.onload = async () => {
+    let checkBoxes = document.querySelectorAll('input')
+    for (checkBox of checkBoxes) {
+        checkBox.onclick = async function() {
+            let taskID = this.getAttribute('task-id')
+            let taskCompleted = this.checked
+            
+            let resp = await fetch(`${taskID}/${taskCompleted}`, {method: "POST"})
+            let data = await resp.json()
+            console.log(data)
+            window.location.reload()
+        }
+    }
+}
+</script>
+{{end}}
+
+{{define "Resources"}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.2.0/css/uikit.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.2.0/js/uikit.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.2.0/js/uikit-icons.min.js"></script>
+{{end}}
