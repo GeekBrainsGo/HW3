@@ -36,11 +36,12 @@ type PostInBlog struct {
 
 // PostRepository - storage of Posts
 type PostRepository interface {
-	FindPostByID(id string) PostInBlog
-	//FindPostsByRubric(r Rubric) []PostInBlog
-	//FindPostsByQuery(phrase string) []PostInBlog
-	SavePost(p PostInBlog) (string, error)
-	UpdatePost(p PostInBlog) (bool, error)
+	FindByID(id string) (PostInBlog, error)
+	Find(limit, offset int) ([]PostInBlog, error)
+	//FindByRubric(r Rubric) ([]PostInBlog, error)
+	//FindByQuery(phrase string) ([]PostInBlog, error)
+	Save(p PostInBlog) (string, error)
+	Update(p PostInBlog) error
 	//DeletePost(p PostInBlog) (bool, error)
 }
 
