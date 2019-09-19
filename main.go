@@ -15,7 +15,7 @@ func main() {
 
 	serv := Server{
 		Title: "TODO",
-		Tasks:[]string{
+		Tasks: []string{
 			"Task 1",
 			"Task 2",
 			"Task 3",
@@ -32,7 +32,15 @@ func main() {
 
 type Server struct {
 	Title string
-	Tasks []string
+	Tasks TaskItems
+}
+
+type TaskItems []TaskItem
+
+type TaskItem struct {
+	Text      string
+	Completed bool
+	Labels    string
 }
 
 func (serv *Server) HandleGetIndex(w http.ResponseWriter, r *http.Request) {
