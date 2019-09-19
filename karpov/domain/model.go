@@ -1,0 +1,190 @@
+package domain
+
+const (
+	// PostStateWrite - state of post when it only creating by Author
+	PostStateWrite = "write"
+	// PostStateModerate - is state of post when it's saved, but not showing for other users, only Author/Moderator/Admin cat access to it
+	PostStateModerate = "moderate"
+	// PostStatePublic - is state of post when it's saved and all can see it
+	PostStatePublic = "public"
+	// PostStateBlocked - is state of post when it's saved, but no one can't access to it, only admin
+	PostStateBlocked = "blocked"
+	// UserAdmin - roleID for administrator
+	UserAdmin = iota
+	// UserModerator - roleID for moderator
+	UserModerator
+	// UserDefault - roleID for other users
+	UserDefault
+)
+
+// PostInBlog - main entity my blog, like story in livejournal
+type PostInBlog struct {
+	ID           string
+	Title        string
+	Author       User
+	Rubric       Rubric
+	Content      string
+	Tags         Tags
+	State        string
+	CreatedAt    string // RFC3339/ISO8601
+	ModifiedAt   string // RFC3339/ISO8601
+	ParentPost   *PostInBlog
+	CountOfViews int64
+	CountOfStars int64
+	CommentsIDs  []string
+}
+
+// PostRepository - storage of Posts
+type PostRepository interface {
+	FindPostByID(id string) PostInBlog
+	//FindPostsByRubric(r Rubric) []PostInBlog
+	//FindPostsByQuery(phrase string) []PostInBlog
+	SavePost(p PostInBlog) (string, error)
+	UpdatePost(p PostInBlog) (bool, error)
+	//DeletePost(p PostInBlog) (bool, error)
+}
+
+// [Setters fo PostInBlog]
+
+// SetID - setter for ID
+func (p *PostInBlog) SetID(id string) *PostInBlog {
+	p.ID = id
+	return p
+}
+
+// SetTitle - setter for Title
+func (p *PostInBlog) SetTitle(title string) *PostInBlog {
+	p.Title = title
+	return p
+}
+
+// SetAuthor - setter for Author
+func (p *PostInBlog) SetAuthor(author User) *PostInBlog {
+	p.Author = author
+	return p
+}
+
+// SetRubric - setter for ID
+func (p *PostInBlog) SetRubric(rubric Rubric) *PostInBlog {
+	p.Rubric = rubric
+	return p
+}
+
+// SetContent - setter for ID
+func (p *PostInBlog) SetContent(content string) *PostInBlog {
+	p.Content = content
+	return p
+}
+
+// SetStateWrite - setter for state to write
+func (p *PostInBlog) SetStateWrite() *PostInBlog {
+	p.State = PostStateWrite
+	return p
+}
+
+// SetStateModerate - setter for state to write
+func (p *PostInBlog) SetStateModerate() *PostInBlog {
+	p.State = PostStateModerate
+	return p
+}
+
+// SetStatePublic - setter for state to write
+func (p *PostInBlog) SetStatePublic() *PostInBlog {
+	p.State = PostStatePublic
+	return p
+}
+
+// SetStateBlocked - setter for state to write
+func (p *PostInBlog) SetStateBlocked() *PostInBlog {
+	p.State = PostStateBlocked
+	return p
+}
+
+// SetCreatedAt - setter for ID
+func (p *PostInBlog) SetCreatedAt(createdAt string) *PostInBlog {
+	// TODO: add time.Parse and check, set to Now or something else. You must think about it!
+	p.CreatedAt = createdAt
+	return p
+}
+
+// SetModifiedAt - setter for ModifiedAt
+func (p *PostInBlog) SetModifiedAt(modifiedAt string) *PostInBlog {
+	// TODO: add time.Parse and check, set to Now or something else. You must think about it!
+	p.ModifiedAt = modifiedAt
+	return p
+
+}
+
+// SetParentPost - setter for ParentPost
+func (p *PostInBlog) SetParentPost(pp *PostInBlog) *PostInBlog {
+	p.ParentPost = pp
+	return p
+}
+
+// IncCountOfViews - increment of CountOfViews
+func (p *PostInBlog) IncCountOfViews() *PostInBlog {
+	p.CountOfViews++
+	return p
+}
+
+// IncCountOfStars - increment of CountOfViews
+func (p *PostInBlog) IncCountOfStars() *PostInBlog {
+	p.CountOfStars++
+	return p
+}
+
+// DecCountOfStars - decrement of CountOfViews
+func (p *PostInBlog) DecCountOfStars() *PostInBlog {
+	p.CountOfStars--
+	return p
+}
+
+// SetTags - setter for ID
+func (p *PostInBlog) SetTags(tags Tags) *PostInBlog {
+	p.Tags = tags
+	return p
+}
+
+// AddCommentsID - setter for ID
+func (p *PostInBlog) AddCommentsID(commentIDs []string) *PostInBlog {
+	// TODO: add check for exists commentID in the slice
+	for _, commentID := range commentIDs {
+		p.CommentsIDs = append(p.CommentsIDs, commentID)
+	}
+	return p
+}
+
+// [BusinessRules for Posts]
+
+// PostAdd - adding new PostInBlog, returns new PostInBlog ID and error
+// func (p *PostInBlog) PostAdd(newpost PostInBlog) error {
+// 	// all new posts must be moderated
+// 	p.State = PostStateModerate
+
+// }
+
+// User is any one who visit my blog
+type User struct {
+	ID       string
+	Name     string
+	Nick     string
+	EMail    string
+	UserRole int
+	Token    string
+	// and more other properties
+}
+
+// isAdmin - checks admin privileges
+func (ur *User) isAdmin() bool {
+	return ur.UserRole == UserAdmin
+}
+
+// Rubric is topic or headline of Post
+type Rubric struct {
+	ID          string
+	Title       string
+	Description string
+}
+
+// Tags - slice of labels/Tags
+type Tags []string
