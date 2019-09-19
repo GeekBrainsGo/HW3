@@ -43,7 +43,17 @@ func (pc *PostController) SaveNewPost(newpost domain.PostInBlog) (string, error)
 		err = fmt.Errorf("save new post, error, %v", err)
 		return postID, err
 	}
-	return postID, err
+	return postID, nil
+}
+
+// UpdPost updates exists post in the storage
+func (pc *PostController) UpdPost(post domain.PostInBlog) error {
+	err := pc.PostRepo.Update(post)
+	if err != nil {
+		err = fmt.Errorf("update post, error, %v", err)
+		return err
+	}
+	return nil
 }
 
 //
