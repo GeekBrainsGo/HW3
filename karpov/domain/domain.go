@@ -19,19 +19,19 @@ const (
 
 // PostInBlog - main entity my blog, like story in livejournal
 type PostInBlog struct {
-	ID           string
-	Title        string
-	Author       User
-	Rubric       Rubric
-	Content      string
-	Tags         Tags
-	State        string
-	CreatedAt    string // RFC3339/ISO8601
-	ModifiedAt   string // RFC3339/ISO8601
-	ParentPost   *PostInBlog
-	CountOfViews int64
-	CountOfStars int64
-	CommentsIDs  []string
+	ID           string   `json:"id"`
+	Title        string   `json:"title"`
+	Author       User     `json:"author"`
+	Rubric       Rubric   `json:"rubric"`
+	Content      string   `json:"content"`
+	Tags         Tags     `json:"tags"`
+	State        string   `json:"state"`
+	CreatedAt    string   `json:"created_at"`  // RFC3339/ISO8601
+	ModifiedAt   string   `json:"modified_at"` // RFC3339/ISO8601
+	ParentPostID string   `json:"parent_post_id"`
+	CountOfViews int64    `json:"count_of_views"`
+	CountOfStars int64    `json:"count_of_stars"`
+	CommentsIDs  []string `json:"comments_ids"`
 }
 
 // PostRepository - storage of Posts
@@ -115,9 +115,9 @@ func (p *PostInBlog) SetModifiedAt(modifiedAt string) *PostInBlog {
 
 }
 
-// SetParentPost - setter for ParentPost
-func (p *PostInBlog) SetParentPost(pp *PostInBlog) *PostInBlog {
-	p.ParentPost = pp
+// SetParentPostID - setter for ParentPost
+func (p *PostInBlog) SetParentPostID(pid string) *PostInBlog {
+	p.ParentPostID = pid
 	return p
 }
 
@@ -165,13 +165,23 @@ func (p *PostInBlog) AddCommentsID(commentIDs []string) *PostInBlog {
 
 // User is any one who visit my blog
 type User struct {
-	ID       string
-	Name     string
-	Nick     string
-	EMail    string
-	UserRole int
-	Token    string
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Nick     string `json:"nick"`
+	EMail    string `json:"email"`
+	UserRole int    `json:"userrole"`
+	Token    string `json:"token"`
 	// and more other properties
+}
+
+// UserRepository is a storage of Users
+type UserRepository interface {
+	Store(u User) (string, error)
+	FindByToken(t string) (User, error)
+	FindByID(id string) (User, error)
+	Find() ([]User, error)
+	Update(u User) error
+	Delete(u User) error
 }
 
 // isAdmin - checks admin privileges
@@ -181,10 +191,31 @@ func (ur *User) isAdmin() bool {
 
 // Rubric is topic or headline of Post
 type Rubric struct {
-	ID          string
-	Title       string
-	Description string
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 // Tags - slice of labels/Tags
 type Tags []string
+
+// CommentOfPost is single comment for some Post
+type CommentOfPost struct {
+	ID           string `json:"id"`
+	Author       User   `json:"author"`
+	Content      string `json:"content"`
+	CountOfStars int64  `json:"count_of_stars"`
+	PostID       string `json:"postid"`
+}
+
+// CommentsOfPost is slice of comments
+type CommentsOfPost []CommentOfPost
+
+// CommentsRepository is a storage for comments maybe another storage and full text search
+type CommentsRepository interface {
+	Store(c CommentOfPost) (string, error)
+	FindByID(is string) (CommentOfPost, error)
+	FindByPostID(pid string) ([]CommentsOfPost, error)
+	Update(c CommentOfPost) error
+	Delete(c CommentOfPost) error
+}
