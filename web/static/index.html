@@ -1,0 +1,21 @@
+{{define "page"}}
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>{{.Title}}</title>
+    </head>
+    <body>
+        <!--{{.Title}}-->        <!--, length is {{len .Title}}-->
+        <h1>{{.Title}}</h1>
+        {{range .Tasks}}
+            {{.}}
+        {{end}}
+    </body>
+</html>
+{{end}}
+
+{{define "ItemList"}}
+<span>{.Text}</span>
+{{end}}
