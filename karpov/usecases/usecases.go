@@ -10,7 +10,8 @@ import (
 type PostController struct {
 	//Posts []domain.PostInBlog
 	PostRepo domain.PostRepository
-	Log      Logger
+	//CommentsRepo domain.CommentsRepository
+	Log Logger
 }
 
 // [Case - look posts]
