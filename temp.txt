@@ -1,0 +1,7 @@
+                        <button class="uk-button uk-button-default" type="button">{{.Title}}</button>
+                    <div uk-dropdown="mode: click">{{.Body}}
+                    <br/><span class="uk-label">Комментариев: {{len .Comments}}</span>
+                    </div>
+
+
+    {{template "head.html ."}}

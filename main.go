@@ -1,53 +1,36 @@
 package main
 
 import (
-	"html/template"
-	"io/ioutil"
-	"net/http"
 	"os"
+	"os/signal"
 
-	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	r := chi.NewRouter()
+	signals := make(chan os.Signal)
+	lg := configureLogger()
+	lg.Info("Запуск сервера ...")
 
-	serv := Server{
-		Title: "TODO",
-		Tasks: []string{
-			"Task 1",
-			"Task 2",
-			"Task 3",
-		},
-	}
+	serv := NewServer(lg)
 
-	// r.Handle("/", http.FileServer(http.Dir("./web/static/")))
-	r.Route("/", func(r chi.Router) {
-		r.Get("/", serv.HandleGetIndex)
-	})
+	go func() {
+		err := serv.Start()
+		if err != nil {
+			lg.WithError(err).Fatal("Запуск сервера не возможен")
+		}
+	}()
 
-	http.ListenAndServe(":8080", r)
+	signal.Notify(signals, os.Kill, os.Interrupt)
+	<-signals
+	lg.Info("Сервер остановлен!")
 }
 
-type Server struct {
-	Title string
-	Tasks TaskItems
-}
-
-type TaskItems []TaskItem
-
-type TaskItem struct {
-	Text      string
-	Completed bool
-	Labels    string
-}
-
-func (serv *Server) HandleGetIndex(w http.ResponseWriter, r *http.Request) {
-
-	file, _ := os.Open("./web/static/index.html")
-	data, _ := ioutil.ReadAll(file)
-
-	templ := template.Must(template.New("page").Parse(string(data)))
-	logrus.Info(templ.ExecuteTemplate(w, "page", serv))
+// configureLogger - Настраивает логгер
+func configureLogger() *logrus.Logger {
+	lg := logrus.New()
+	lg.SetReportCaller(false)
+	lg.SetFormatter(&logrus.TextFormatter{})
+	lg.SetLevel(logrus.DebugLevel)
+	return lg
 }
