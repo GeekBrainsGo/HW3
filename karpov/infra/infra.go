@@ -54,6 +54,10 @@ func (bs *BlogServer) registerPostRoutes() {
 	bs.mux.Route("/posts", func(r chi.Router) {
 		r.Get("/", bs.controller.GetPosts)
 		r.Get("/{"+postID+"}", bs.controller.GetOnePost)
+		r.Get("/{"+postID+"}/edit", bs.controller.EditPost)
+		r.Get("/new", bs.controller.WriteNewPost)
+		r.Put("/{"+postID+"}", bs.controller.UpdPost)
+		r.Post("/", bs.controller.AddNewPost)
 	})
 }
 
@@ -112,7 +116,7 @@ func (pc *PostController) GetPosts(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.FormValue("limit"))
 	offset, _ := strconv.Atoi(r.FormValue("offset"))
 	if limit == 0 {
-		limit = 10
+		limit = 50
 	}
 	posts, err := pc.PostRepo.Find(limit, offset)
 	if err != nil {
@@ -145,6 +149,91 @@ func (pc *PostController) GetOnePost(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl := template.Must(template.New("indexSinglePOST").ParseFiles(templatePOSTS))
 	tmpl.ExecuteTemplate(w, "indexSinglePOST", data)
+}
+
+// EditPost - handler func for exposeedit form for Posts
+func (pc *PostController) EditPost(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, postID)
+	post, err := pc.PostRepo.FindByID(id)
+	if err != nil {
+		render.Render(w, r, ErrServerInternal(err))
+		return
+	}
+	data := templateOnePostFill{
+		Title: post.Title,
+		Post:  post,
+	}
+	tmpl := template.Must(template.New("indexEditPOST").ParseFiles(templatePOSTS))
+	tmpl.ExecuteTemplate(w, "indexEditPOST", data)
+}
+
+// WriteNewPost - handler func for expose edit form for new Posts
+func (pc *PostController) WriteNewPost(w http.ResponseWriter, r *http.Request) {
+	post := domain.PostInBlog{
+		Title:   "",
+		Content: "",
+	}
+	data := templateOnePostFill{
+		Title: post.Title,
+		Post:  post,
+	}
+	tmpl := template.Must(template.New("indexNewPOST").ParseFiles(templatePOSTS))
+	tmpl.ExecuteTemplate(w, "indexNewPOST", data)
+}
+
+// UpdPost - handler func for update post in the Storage
+func (pc *PostController) UpdPost(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, postID)
+	newpost := domain.PostInBlog{
+		ID:      id,
+		Title:   r.FormValue("title"),
+		Content: r.FormValue("content"),
+		Rubric: domain.Rubric{
+			Title: r.FormValue("rubric"),
+		},
+	}
+	oldpost, err := pc.PostRepo.FindByID(id)
+	if err != nil {
+		render.Render(w, r, ErrServerInternal(err))
+		return
+	}
+	// Simple comparison and fill values for upd Post
+	// TODO: add comparison/merge method for PostInBlog in the domain.go, without reflection please!!!
+	if oldpost.Title != newpost.Title {
+		oldpost.Title = newpost.Title
+	}
+	if oldpost.Content != newpost.Content {
+		oldpost.Content = newpost.Content
+	}
+	oldpost.ModifiedAt = time.Now().Format(time.RFC3339)
+	if oldpost.Rubric.Title != newpost.Rubric.Title {
+		oldpost.Rubric.Title = newpost.Rubric.Title
+	}
+
+	err = pc.PostRepo.Update(oldpost)
+	if err != nil {
+		render.Render(w, r, ErrServerInternal(err))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// AddNewPost - handler func for save new post in the storage
+func (pc *PostController) AddNewPost(w http.ResponseWriter, r *http.Request) {
+	newpost := domain.PostInBlog{
+		Title:   r.FormValue("title"),
+		Content: r.FormValue("content"),
+		Rubric: domain.Rubric{
+			Title: r.FormValue("rubric"),
+		},
+	}
+	id, err := pc.PostRepo.Save(newpost)
+	if err != nil {
+		render.Render(w, r, ErrServerInternal(err))
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("/posts/" + id))
 }
 
 type templatePostsFill struct {

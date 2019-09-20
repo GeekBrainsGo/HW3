@@ -56,6 +56,7 @@ func (spr *SimplePostRepo) Find(limit, offset int) ([]domain.PostInBlog, error) 
 // add new post to the map
 func (spr *SimplePostRepo) Save(p domain.PostInBlog) (string, error) {
 	newID := uuid.Must(uuid.NewV4()).String()
+	p.ID = newID
 	spr.Posts[newID] = p
 	return newID, nil
 }
