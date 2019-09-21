@@ -15,7 +15,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -29,7 +28,6 @@ var base *template.Template
 type DB struct {
 	Title string
 	Posts Posts
-	sync.Mutex
 }
 
 // Posts stands for array of posts.
@@ -96,14 +94,6 @@ func NewBlog() *Blog {
 	return blog
 }
 
-// Add adds new post to database and return it's id.
-func (db *DB) Add(p Post) int {
-	db.Lock()
-	defer db.Unlock()
-	db.Posts = append(db.Posts, p)
-	return len(db.Posts) - 1
-}
-
 // Main handles displaying all posts in blog.
 func (b *Blog) Main(w http.ResponseWriter, r *http.Request) {
 	err := base.ExecuteTemplate(w, "main", b.DB)
@@ -131,7 +121,7 @@ func (b *Blog) ViewPost(w http.ResponseWriter, r *http.Request) {
 func (b *Blog) EditPost(w http.ResponseWriter, r *http.Request) {
 	i := chi.URLParam(r, "id")
 	if len(i) == 0 {
-		err := base.ExecuteTemplate(w, "edit", Post{})
+		err := base.ExecuteTemplate(w, "edit", Post{ID: len(b.Posts)})
 		if err != nil {
 			b.WithError(err).Error("addpost")
 			return
@@ -144,7 +134,7 @@ func (b *Blog) EditPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method != http.MethodPost && id < len(b.Posts) {
-		err := base.ExecuteTemplate(w, "edit", b.DB.Posts[id])
+		err := base.ExecuteTemplate(w, "edit", b.Posts[id])
 		if err != nil {
 			b.WithError(err).Error("editpost")
 			return
@@ -152,14 +142,14 @@ func (b *Blog) EditPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p := Post{
-		ID:      len(b.Posts),
+		ID:      id,
 		Title:   r.FormValue("title"),
 		Author:  r.FormValue("author"),
 		Created: time.Now(),
 		Content: template.HTML(r.FormValue("body")),
 	}
-	if id == 0 {
-		id = b.Add(p)
+	if id == len(b.Posts) {
+		b.Posts = append(b.Posts, p)
 	} else {
 		b.Posts[id] = p
 	}
