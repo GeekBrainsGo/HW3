@@ -1,0 +1,84 @@
+{{define "header"}}<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>{{.Title}}</title>
+        <link rel="stylesheet" href="https://bootswatch.com/4/cerulean/bootstrap.css" media="screen">
+    </head>
+    <body>
+        {{template "navbar" .}}
+        <div class="container">
+{{end}}
+
+{{define "footer"}}
+        </div>
+        <script src="https://bootswatch.com/_vendor/jquery/dist/jquery.min.js"></script>
+        <script src="https://bootswatch.com/_vendor/bootstrap/dist/js/bootstrap.min.js"></script>
+    </body>
+</html>
+{{end}}
+
+{{define "main"}}
+    {{template "header" .}}
+    {{range .Posts}}
+            <article class="well">
+                <h3>{{.Title}}</h3>
+                <small>Created on {{.Created.Format "2 01 2006 15:04:05"}} by {{.Author}}</small>
+                <p>{{.Content}}</p>
+                <a class="btn btn-outline-primary" href="/posts/{{.ID}}">Read More</a>
+            </article>
+    {{end}}
+    {{template "footer"}}
+{{end}}
+
+{{define "view"}}
+    {{template "header"}}
+            <a class="btn btn-outline-primary" href="/">Back</a>
+            <h1>{{.Title}}</h1>
+            <small>Created on {{.Created.Format "2 01 2006 15:04:05"}} by {{.Author}}</small>
+            <p>{{.Content}}</p>
+            <a href="/edit/{{.ID}}" class="btn btn-primary">Edit</a>
+    {{template "footer"}}
+{{end}}
+
+{{define "edit"}}
+    {{template "header"}}
+            <h3>Post</h3>
+            <form method="POST" action="/edit/{{.ID}}">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" name="title" class="form-control" value="{{.Title}}">
+                </div>
+                <div class="form-group">
+                    <label>Author</label>
+                    <input type="text" name="author" class="form-control" value="{{.Author}}">
+                </div>
+                <div class="form-group">
+                    <label>Body</label>
+                    <textarea name="body" class="form-control">{{.Content}}</textarea>
+                </div>
+                <input class="btn btn-primary" type="submit" value="submit">
+                <a class="btn btn-outline-primary" href="/">Back</a>
+            </form>
+    {{template "footer"}}
+{{end}}
+
+{{define "navbar"}}
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <a class="navbar-brand" href="#">{{.Title}}</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarColor01">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                    <a class="nav-link" href="/">Home </a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="/edit">Add Post </a>
+                    </li>
+                </ul>
+            </div>
+      </nav>
+{{end}}
