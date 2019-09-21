@@ -18,7 +18,6 @@ const (
 
 // Server - Объект сервера
 type Server struct {
-	Pg    Page
 	lg    *logrus.Logger
 	Blogs BlogItems
 }
@@ -26,23 +25,28 @@ type Server struct {
 // NewServer - создаёт новый экземпляр сервера
 func NewServer(lg *logrus.Logger) *Server {
 	return &Server{
-		Pg: Page{},
 		lg: lg,
 		Blogs: BlogItems{
 			{
+				ID:       0,
 				Title:    "Мой первый блог",
 				Body:     "Первый блин комом. И зачем я это все делаю.",
 				Comments: []string{"Отличная статья", "Не чего более бредового не читал", "Супер"},
 			},
 			{
+				ID:    1,
 				Title: "Эксперементы продолжаются",
 				Body:  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.",
 			},
-			{Title: "А это что такое",
-				Body: "Здесь ничего нет",
+			{
+				ID:    2,
+				Title: "А это что такое",
+				Body:  "Здесь ничего нет",
 			},
-			{Title: "Полный бред",
-				Body: "Здесь тоже пусто",
+			{
+				ID:    3,
+				Title: "Полный бред",
+				Body:  "Здесь тоже пусто",
 			},
 		},
 	}
@@ -63,24 +67,34 @@ func (serv *Server) ConfigureHandlers(r *chi.Mux) {
 		r.Get("/", serv.HandleBlogIndex)
 		r.Route("/blog", func(r chi.Router) {
 			r.Get("/{blogID}", serv.HandleBlog)
+			r.Get("/del/{blogID}", serv.HandleBlogDelete)
+			r.Get("/edit/{blogID}", serv.HandleEditBlog)
 		})
 	})
 }
 
 func (serv *Server) HandleBlogIndex(w http.ResponseWriter, r *http.Request) {
 
-	// serv.Pg = Page{
-	// 	Title:   "Мой личный блог",
-	// 	Content: "Главная страница",
-	// }
-
 	file, _ := os.Open(SERVER_PATH + "index.html")
 	data, _ := ioutil.ReadAll(file)
 
 	templ := template.Must(template.New("page").Parse(string(data)))
-	// templ := template.Must(template.ParseFiles(SERVER_PATH+"index.html", SERVER_PATH+"head.html"))
 	err := templ.ExecuteTemplate(w, "page", serv)
-	// err := templ.ExecuteTemplate(w, SERVER_PATH+"index.html", serv)
+	if err != nil {
+		serv.lg.WithError(err).Error("template")
+	}
+}
+
+func (serv *Server) HandleEditBlog(w http.ResponseWriter, r *http.Request) {
+
+	blogIDStr := chi.URLParam(r, "blogID")
+	blogID, _ := strconv.ParseInt(blogIDStr, 10, 64)
+
+	file, _ := os.Open(SERVER_PATH + "edit.html")
+	data, _ := ioutil.ReadAll(file)
+
+	templ := template.Must(template.New("edit").Parse(string(data)))
+	err := templ.ExecuteTemplate(w, "edit", serv.Blogs[blogID])
 	if err != nil {
 		serv.lg.WithError(err).Error("template")
 	}
@@ -96,6 +110,28 @@ func (serv *Server) HandleBlog(w http.ResponseWriter, r *http.Request) {
 
 	templ := template.Must(template.New("blog").Parse(string(data)))
 	err := templ.ExecuteTemplate(w, "blog", serv.Blogs[blogID])
+	if err != nil {
+		serv.lg.WithError(err).Error("template")
+	}
+}
+
+func RemoveBlogSlice(slice BlogItems, start, end int64) BlogItems {
+	return append(slice[:start], slice[end:]...)
+}
+
+func (serv *Server) HandleBlogDelete(w http.ResponseWriter, r *http.Request) {
+	blogIDStr := chi.URLParam(r, "blogID")
+	blogID, _ := strconv.ParseInt(blogIDStr, 10, 64)
+
+	slice := RemoveBlogSlice(serv.Blogs, blogID, blogID+1)
+
+	serv.Blogs = slice
+
+	file, _ := os.Open(SERVER_PATH + "index.html")
+	data, _ := ioutil.ReadAll(file)
+
+	templ := template.Must(template.New("page").Parse(string(data)))
+	err := templ.ExecuteTemplate(w, "page", serv)
 	if err != nil {
 		serv.lg.WithError(err).Error("template")
 	}
@@ -126,8 +162,7 @@ func (serv *Server) RequestTracerMiddleware(next http.Handler) http.Handler {
 		body, _ := ioutil.ReadAll(r.Body)
 		serv.lg.
 			WithFields(map[string]interface{}{
-				"url": r.URL.String(),
-				// "cookie": r.Header.Get("Cookie"),
+				"url":  r.URL.String(),
 				"body": string(body),
 			}).
 			Debug("request")

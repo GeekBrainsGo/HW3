@@ -3,6 +3,7 @@ package main
 type BlogItems []BlogItem
 
 type BlogItem struct {
+	ID       int64
 	Title    string
 	Body     string
 	Comments []string
@@ -14,8 +15,4 @@ type ErrorModel struct {
 	Err      string      `json:"error"`
 	Desc     string      `json:"desc"`
 	Internal interface{} `json:"internal"`
-}
-
-type Page struct {
-	Title, Content string
 }
