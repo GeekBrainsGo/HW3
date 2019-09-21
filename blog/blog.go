@@ -96,11 +96,12 @@ func NewBlog() *Blog {
 	return blog
 }
 
-// Add adds new post to database.
-func (db *DB) Add(p Post) {
+// Add adds new post to database and return it's id.
+func (db *DB) Add(p Post) int {
 	db.Lock()
 	defer db.Unlock()
 	db.Posts = append(db.Posts, p)
+	return len(db.Posts) - 1
 }
 
 // Main handles displaying all posts in blog.
@@ -112,7 +113,7 @@ func (b *Blog) Main(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ViewPost handles editing and creating blog's post.
+// ViewPost handles for viewing a specific blog post
 func (b *Blog) ViewPost(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
 	if id >= len(b.Posts) {
@@ -158,8 +159,7 @@ func (b *Blog) EditPost(w http.ResponseWriter, r *http.Request) {
 		Content: template.HTML(r.FormValue("body")),
 	}
 	if id == 0 {
-		b.Add(p)
-		id = len(b.Posts) - 1
+		id = b.Add(p)
 	} else {
 		b.Posts[id] = p
 	}
