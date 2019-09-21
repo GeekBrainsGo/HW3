@@ -1,0 +1,38 @@
+{{define "edit"}}
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>{{.Title}}</title>
+        {{template "Resources"}}
+    </head>
+    <body>
+        <h1 class="uk-heading-medium">{{.Title}}</h1>
+        <form class="uk-form-horizontal uk-margin-large" action="/blog/edit/{{.ID}}" method="POST">
+            <fieldset class="uk-fieldset">
+                <legend class="uk-legend">Редактируйте свою статью</legend>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="form-horizontal-text">Заголовок:</label>
+                    <div class="uk-form-controls">
+                        <input class="uk-input" id="form-horizontal-text" name="title" type="text" placeholder={{.Title}} value={{.Title}}>
+                    </div>
+                </div>
+                <div class="uk-margin">
+                    <label class="uk-form-label" for="form-horizontal-text">Содержимое:</label>
+                    <div class="uk-form-controls">
+                        <textarea class="uk-textarea" id="form-horizontal-textarea" rows="5" placeholder="Textarea" name="body">{{.Body}}</textarea>
+                    </div>
+                </div>
+                <button class="uk-button uk-button-default">ЗАПИСАТЬ</button>
+            </fieldset>
+        </form>
+    </body>
+</html>
+{{end}}
+
+{{define "Resources"}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.2.0/css/uikit.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.2.0/js/uikit.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.2.0/js/uikit-icons.min.js"></script>
+{{end}}
